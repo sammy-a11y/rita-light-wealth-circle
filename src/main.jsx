@@ -13,6 +13,16 @@ AOS.init({
   offset: 60
 })
 
+// Auto logout when app is closed/removed from recent
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'hidden') {
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches
+    if (isPWA) {
+      await supabase.auth.signOut()
+    }
+  }
+})
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
