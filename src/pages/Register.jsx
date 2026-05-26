@@ -211,7 +211,7 @@ const sendOTP = async () => {
       if (profileError) throw profileError
 
       setPreparing(true)
-      await new Promise(r => setTimeout(r, 3000))
+      await new Promise(r => setTimeout(r, 4000))
       navigate('/dashboard')
 
     } catch (err) {
