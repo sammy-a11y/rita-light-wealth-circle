@@ -424,7 +424,7 @@ const fetchRequests = async () => {
                         {req.users?.nin || 'Not provided'}
                       </div>
                     </div>
-                    <a href="https://verify.nimc.gov.ng" target="_blank" rel="noopener noreferrer"
+                    <a href="https://nimc.gov.ng/verify-nin/" target="_blank" rel="noopener noreferrer"
                       style={{
                         background:'#7F77DD20', border:'1px solid #7F77DD40',
                         borderRadius:8, padding:'6px 12px',
