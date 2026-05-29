@@ -1,7 +1,9 @@
 # Rita Light Wealth Circle™ — White Label Source Code
 
-> **Nigeria's most secure digital Ajo/Osusu platform**  
+ 
 > Built with React + Vite + Supabase | PWA Ready | Mobile First
+> New: Secure Digital Peer-to-Peer (P2P) Rotational Savings & Thrift Platform
+> Built with React + Vite + Supabase | PWA Ready | White-Label Source Code
 
 ---
 
@@ -75,7 +77,7 @@ Create a `.env` file in the root folder:
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_publishable_key
-VITE_TERMII_API_KEY=your_termii_api_key
+VITE_SMS_API_KEY=your_sms_gateway_api_key (e.g., Termii for Africa or Twilio for Global)
 ```
 
 ### Step 5 — Create Admin Account
@@ -148,6 +150,10 @@ Main brand colors are in `src/index.css`:
 #0f0e1a → your background
 ```
 
+### Change Currency 
+To change the currency from Naira (₦) to your local currency (like $ or €):
+- Open src/pages/Landing.jsx and your dashboard files, search for the ₦ symbol, and replace it with your preferred currency sign.
+
 ### Change WhatsApp Number
 Search for `wa.me/234` and replace with client's WhatsApp number in:
 - `src/pages/Landing.jsx`
@@ -191,7 +197,7 @@ Payment shows as ✅ PAID in scoreboard
 
 ## 🔐 Security Features
 
-- NIN verification (admin cross-checks on NIMC portal)
+- National ID / SSN verification
 - Face video verification stored in Supabase Storage
 - GPS location captured at registration
 - Admin-only blacklist system
@@ -239,8 +245,8 @@ Payment shows as ✅ PAID in scoreboard
 
 For setup support or custom modifications contact:
 
-- **WhatsApp:** +234 XXX XXX XXXX
-- **Email:** your@email.com
+- **WhatsApp:** +2349169530731
+- **Email:** mrcourage34@gmail.com
 - **Twitter:** @yourhandle
 
 ---
