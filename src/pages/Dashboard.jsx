@@ -254,7 +254,7 @@ const fetchPendingRequest = async () => {
         <div data-aos="fade-up" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10, marginBottom:20 }}>
           {[
             { icon:'👥', label:'Browse\nCircles',  action:() => navigate('/groups'),  color:'#7F77DD' },
-            { icon:'💰', label:'Make\nPayment',    action:() => navigate('/payment'), color:'#fbbf24' },
+            { icon:'💰', label:'Make\nPayment', action:() => navigate('/groups'), color:'#fbbf24' },
             { icon:'📋', label:'Transaction\nHistory', action:() => navigate('/history'), color:'#22c55e' },
           ].map(q => (
             <motion.button key={q.label}

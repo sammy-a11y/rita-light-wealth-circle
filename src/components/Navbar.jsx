@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore'
 const userLinks = [
   { to: '/dashboard', icon: '🏠', label: 'Home' },
   { to: '/groups',    icon: '👥', label: 'Groups' },
-  { to: '/payment',   icon: '💰', label: 'Pay' },
+  { to: '/history',   icon: '💰', label: 'Pay' },
   { to: '/history',   icon: '📋', label: 'History' },
   { to: '/profile',   icon: '👤', label: 'Profile' },
 ]

@@ -5,6 +5,11 @@ import { supabase } from '../lib/supabase'
 export const useAuth = () => {
   const { user, profile, loading, setUser, setLoading, fetchProfile } = useAuthStore()
 
+  // Redirect admin to admin panel
+  if (data?.is_admin && window.location.pathname === '/dashboard') {
+    window.location.href = '/admin'
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
