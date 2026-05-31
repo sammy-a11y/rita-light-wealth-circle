@@ -37,6 +37,8 @@ export default function AdminDashboard() {
   })
   const [recentRequests, setRecentRequests] = useState([])
   const [recentPayments, setRecentPayments] = useState([])
+  const [showNotifModal, setShowNotifModal] = useState(false)
+  const [notifForm, setNotifForm] = useState({ title:'', message:'', type:'info' })
   const [loading, setLoading]   = useState(true)
   const [acting, setActing]     = useState(null)
 
@@ -287,6 +289,7 @@ export default function AdminDashboard() {
             { icon:'👥', label:'Members',         action:() => navigate('/admin/members')  },
             { icon:'💳', label:'Payments',        action:() => navigate('/admin/payments') },
             { icon:'📋', label:'Requests',        action:() => navigate('/admin/members')  },
+            { icon:'🔔', label:'Send\nReminder', action:() => setShowNotifModal(true) },
           ].map(q => (
             <motion.button key={q.label} whileTap={{ scale:0.93 }}
               onClick={q.action}

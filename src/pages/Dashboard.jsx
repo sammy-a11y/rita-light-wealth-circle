@@ -395,6 +395,23 @@ const fetchPendingRequest = async () => {
                     </div>
                   </div>
 
+                  {/* Pay button */}
+                  <motion.button
+                    whileTap={{ scale:0.98 }}
+                    onClick={() => navigate(`/payment/${group.id}`)}
+                    style={{
+                      width:'100%', padding:'12px',
+                      background:'linear-gradient(135deg, #fbbf24, #d97706)',
+                      border:'none', borderTop:'1px solid #2a2840',
+                      color:'#3a1f00', fontSize:13,
+                      fontWeight:700, cursor:'pointer',
+                      display:'flex', alignItems:'center',
+                      justifyContent:'center', gap:8,
+                    }}
+                  >
+                    💰 Make Payment
+                  </motion.button>
+
                   {/* Scoreboard button */}
                   <motion.button
                     whileTap={{ scale:0.98 }}
