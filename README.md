@@ -251,13 +251,5 @@ For setup support or custom modifications contact:
 
 ---
 
-## 📄 License
-
-This is a white-label commercial license.  
-You may rebrand and deploy for one (1) client per purchase.  
-Reselling the source code is not permitted.  
-For multi-client license contact us.
-
----
 
 *Rita Light Wealth Circle™ — Save Together. Rise Together.* 🇳🇬
