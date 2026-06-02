@@ -24,7 +24,7 @@ export default function Payment() {
 
   const [form, setForm] = useState({
     sender_name: '', payment_date: dayjs().format('YYYY-MM-DD'),
-    transaction_ref: '', amount: '', slot_id: '',
+    transaction_ref: '', amount: '', slot_id: '', slot_ids: [],
   })
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }))
@@ -57,50 +57,62 @@ export default function Payment() {
   }
 
   const submitPayment = async () => {
-    if (!form.sender_name.trim())     { toast.error('Enter sender name');           return }
-    if (!form.payment_date)           { toast.error('Enter payment date');          return }
+    if (!form.sender_name.trim())     { toast.error('Enter sender name');            return }
+    if (!form.payment_date)           { toast.error('Enter payment date');           return }
     if (!form.transaction_ref.trim()) { toast.error('Enter transaction reference'); return }
-    if (!form.slot_id)                { toast.error('Select slot you are paying for'); return }
-    if (!receipt)                     { toast.error('Upload your payment receipt'); return }
+    if (!form.slot_ids?.length)       { toast.error('Select at least one slot');     return }
+    if (!receipt)                     { toast.error('Upload your payment receipt');  return }
 
     setSubmitting(true)
     try {
       let receiptUrl = null
       const fileName = `receipts/${profile.id}-${Date.now()}-${receipt.name}`
       const { error: uploadError } = await supabase.storage
-        .from('verifications').upload(fileName, receipt, { contentType: receipt.type })
+        .from('verifications')
+        .upload(fileName, receipt, { contentType: receipt.type })
       if (!uploadError) {
-        const { data: urlData } = supabase.storage.from('verifications').getPublicUrl(fileName)
+        const { data: urlData } = supabase.storage
+          .from('verifications').getPublicUrl(fileName)
         receiptUrl = urlData?.publicUrl
       }
 
-      const { error } = await supabase.from('payments').insert({
+      // Insert one payment record per slot
+      const paymentInserts = form.slot_ids.map(slotId => ({
         user_id: profile.id, group_id: groupId,
-        slot_id: form.slot_id, amount: parseFloat(form.amount),
-        sender_name: form.sender_name.trim(), payment_date: form.payment_date,
+        slot_id: slotId,
+        amount: group?.amount_per_slot,
+        sender_name: form.sender_name.trim(),
+        payment_date: form.payment_date,
         transaction_ref: form.transaction_ref.trim(),
-        receipt_url: receiptUrl, status: 'pending', penalty_fee: 0,
-      })
+        receipt_url: receiptUrl,
+        status: 'pending', penalty_fee: 0,
+      }))
+
+      const { error } = await supabase.from('payments').insert(paymentInserts)
       if (error) throw error
 
       await supabase.from('notifications').insert({
         user_id: profile.id, group_id: groupId,
         title: 'Payment Submitted ✅',
-        message: `Your payment of ₦${parseFloat(form.amount).toLocaleString()} for ${group?.name} has been submitted. Admin will verify shortly.`,
+        message: `Your payment for ${form.slot_ids.length} slot(s) in ${group?.name} has been submitted. Admin will verify shortly.`,
         type: 'payment',
       })
 
-      toast.success('Payment submitted! Admin will verify shortly 🎉')
-      setShowForm(false)
-      setReceipt(null)
-      setReceiptPreview(null)
-      setForm(f => ({ ...f, sender_name:'', transaction_ref:'', slot_id:'' }))
+      toast.success('Payment submitted! 🎉')
+      setShowForm(false); setReceipt(null); setReceiptPreview(null)
+      setForm(f => ({ ...f, sender_name:'', transaction_ref:'', slot_ids:[], amount:'' }))
       fetchData()
-    } catch (err) {
-      toast.error(err.message || 'Failed to submit payment')
-    } finally {
-      setSubmitting(false)
-    }
+    } catch (err) { toast.error(err.message || 'Failed to submit payment') }
+    finally       { setSubmitting(false) }
+  }
+
+  // Check if payment already made this cycle
+  const hasPaidThisCycle = (slotId) => {
+    return payments.some(p =>
+      p.slot_id === slotId &&
+      p.status === 'approved' &&
+      p.cycle_number === (group?.current_cycle || 1)
+    )
   }
 
   const statusColor = (status) => ({
@@ -272,23 +284,46 @@ export default function Payment() {
               <div style={{ fontSize:18, fontWeight:800, color:'#f1f0ff', marginBottom:4 }}>Drop Your Receipt</div>
               <div style={{ fontSize:13, color:'#534AB7', marginBottom:24 }}>Fill in your payment details below</div>
 
-              {/* Slot selector */}
+
+              {/* Slot selector - multi select */}
               <div style={{ marginBottom:16 }}>
                 <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#AFA9EC', marginBottom:6 }}>
-                  Which slot are you paying for?
+                  Which slot(s) are you paying for? (tap to select)
                 </label>
-                <div style={{ display:'flex', gap:8 }}>
-                  {mySlots.map(slot => (
-                    <button key={slot.id} onClick={() => set('slot_id', slot.id)}
-                      style={{
-                        flex:1, padding:'10px', borderRadius:10,
-                        background: form.slot_id === slot.id ? 'linear-gradient(135deg, #7F77DD, #534AB7)' : '#1f1d35',
-                        border: form.slot_id !== slot.id ? '1px solid #2a2840' : 'none',
-                        color: form.slot_id === slot.id ? '#fff' : '#AFA9EC',
-                        fontSize:13, fontWeight:700, cursor:'pointer',
-                      }}>Slot #{slot.slot_number}</button>
-                  ))}
+                <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                  {mySlots.map(slot => {
+                    const isSelected = (form.slot_ids || []).includes(slot.id)
+                    return (
+                      <button key={slot.id}
+                        onClick={() => {
+                          const current = form.slot_ids || []
+                          const updated = isSelected
+                            ? current.filter(id => id !== slot.id)
+                            : [...current, slot.id]
+                          set('slot_ids', updated)
+                          // Auto calculate total amount
+                          const total = updated.length * (group?.amount_per_slot || 0)
+                          set('amount', total.toString())
+                        }}
+                        style={{
+                          flex:1, padding:'10px', borderRadius:10,
+                          background: isSelected ? 'linear-gradient(135deg, #7F77DD, #534AB7)' : '#1f1d35',
+                          border: !isSelected ? '1px solid #2a2840' : 'none',
+                          color: isSelected ? '#fff' : '#AFA9EC',
+                          fontSize:13, fontWeight:700, cursor:'pointer',
+                          minWidth:80,
+                        }}
+                      >
+                        {isSelected ? '✓ ' : ''}Slot #{slot.slot_number}
+                      </button>
+                    )
+                  })}
                 </div>
+                {(form.slot_ids || []).length > 0 && (
+                  <div style={{ fontSize:11, color:'#fbbf24', marginTop:6, fontWeight:600 }}>
+                    Total: ₦{((form.slot_ids || []).length * (group?.amount_per_slot || 0)).toLocaleString()}
+                  </div>
+                )}
               </div>
 
               {[
