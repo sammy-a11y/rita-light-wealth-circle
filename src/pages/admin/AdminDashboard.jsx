@@ -535,7 +535,105 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-        
+        <AnimatePresence>
+  {showNotifModal && (
+    <motion.div
+      initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
+      style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.85)', zIndex:200, display:'flex', alignItems:'flex-end', justifyContent:'center' }}
+      onClick={() => setShowNotifModal(false)}
+    >
+      <motion.div
+        initial={{ y:'100%' }} animate={{ y:0 }} exit={{ y:'100%' }}
+        transition={{ type:'spring', stiffness:300, damping:30 }}
+        onClick={e => e.stopPropagation()}
+        style={{ background:'#1a1830', borderTop:'1px solid #2a2840', borderRadius:'24px 24px 0 0', width:'100%', maxWidth:600, padding:'20px 24px 40px' }}
+      >
+        <div style={{ width:40, height:4, borderRadius:2, background:'#2a2840', margin:'0 auto 20px' }} />
+        <div style={{ fontSize:18, fontWeight:800, color:'#f1f0ff', marginBottom:20 }}>
+          📢 Send Notification to All Members
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#AFA9EC', marginBottom:6 }}>Title</label>
+          <input value={notifForm.title}
+            onChange={e => setNotifForm(f => ({ ...f, title: e.target.value }))}
+            placeholder="e.g. Payment Reminder" />
+        </div>
+
+        <div style={{ marginBottom:14 }}>
+          <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#AFA9EC', marginBottom:6 }}>Message</label>
+          <textarea value={notifForm.message}
+            onChange={e => setNotifForm(f => ({ ...f, message: e.target.value }))}
+            placeholder="e.g. Please make your payment before Friday..."
+            style={{ width:'100%', minHeight:100, resize:'vertical' }} />
+        </div>
+
+        <div style={{ marginBottom:20 }}>
+          <label style={{ display:'block', fontSize:12, fontWeight:600, color:'#AFA9EC', marginBottom:6 }}>Type</label>
+          <div style={{ display:'flex', gap:8 }}>
+            {['info','payment','warning','penalty'].map(t => (
+              <button key={t} onClick={() => setNotifForm(f => ({ ...f, type: t }))}
+                style={{
+                  flex:1, padding:'8px', borderRadius:10,
+                  background: notifForm.type === t ? 'linear-gradient(135deg, #7F77DD, #534AB7)' : '#1f1d35',
+                  border: notifForm.type !== t ? '1px solid #2a2840' : 'none',
+                  color: notifForm.type === t ? '#fff' : '#AFA9EC',
+                  fontSize:11, fontWeight:600, cursor:'pointer',
+                  textTransform:'capitalize',
+                }}>{t}</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={() => setShowNotifModal(false)}
+            style={{ flex:1, padding:'13px', background:'#1f1d35', border:'1px solid #2a2840', color:'#AFA9EC', borderRadius:12, fontSize:14, fontWeight:600, cursor:'pointer' }}>
+            Cancel
+          </button>
+          <motion.button whileTap={{ scale:0.97 }}
+            onClick={async () => {
+              if (!notifForm.title || !notifForm.message) {
+                toast.error('Fill in title and message')
+                return
+              }
+              try {
+                // Get all non-admin users
+                const { data: users } = await supabase
+                  .from('users')
+                  .select('id')
+                  .eq('is_admin', false)
+                  .eq('is_blacklisted', false)
+
+                // Send to all
+                const notifs = users.map(u => ({
+                  user_id: u.id,
+                  title:   notifForm.title,
+                  message: notifForm.message,
+                  type:    notifForm.type,
+                }))
+
+                await supabase.from('notifications').insert(notifs)
+                toast.success(`Notification sent to ${users.length} members! 🔔`)
+                setShowNotifModal(false)
+                setNotifForm({ title:'', message:'', type:'info' })
+              } catch (err) {
+                toast.error('Failed to send notification')
+              }
+            }}
+            style={{
+              flex:2, padding:'13px',
+              background:'linear-gradient(135deg, #fbbf24, #d97706)',
+              border:'none', color:'#3a1f00',
+              borderRadius:12, fontSize:14,
+              fontWeight:800, cursor:'pointer',
+            }}>
+            Send to All Members 🔔
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       </div>
     </div>
