@@ -383,43 +383,57 @@ export default function AdminGroups() {
                 </div>
               </div>
 
-              {/* Amount per slot */}
-              <div style={{ marginBottom:14 }}>
-                <label style={{ display:'block', fontSize:11, fontWeight:600, color:'#AFA9EC', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>
-                  Amount Per Slot (₦) — what members pay
-                </label>
-                <input type="number" value={form.amount_per_slot}
-                  onChange={e => set('amount_per_slot', e.target.value)}
-                  placeholder="e.g. 2000" />
-              </div>
+{/* Amount per slot */}
+<div style={{ marginBottom:14 }}>
+  <label style={{ display:'block', fontSize:11, fontWeight:600, color:'#AFA9EC', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>
+    Amount Members Pack (₦)
+  </label>
+  <input type="number" value={form.amount_per_slot}
+    onChange={e => {
+      set('amount_per_slot', e.target.value)
+      // Auto recalculate payout
+      const payout = parseFloat(e.target.value||0) - parseFloat(form.admin_cut||0)
+      if (payout > 0) set('payout_amount', payout.toString())
+    }}
+    placeholder="e.g. 25000" />
+</div>
 
-              {/* Admin cut */}
-              <div style={{ marginBottom:14 }}>
-                <label style={{ display:'block', fontSize:11, fontWeight:600, color:'#fbbf24', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>
-                    Your Cut Per Slot (₦) — admin fee 🔒
-                </label>
-                <input type="number" value={form.admin_cut}
-                    onChange={e => {
-                    set('admin_cut', e.target.value)
-                    // Auto calculate payout
-                    const payout = parseFloat(form.amount_per_slot||0) - parseFloat(e.target.value||0)
-                    if (payout > 0) set('payout_amount', payout.toString())
-                    }}
-                    placeholder="e.g. 5000" />
-                <div style={{ fontSize:11, color:'#534AB7', marginTop:4 }}>
-                    Member payout = Amount per slot minus your cut
-                </div>
-              </div>
+{/* Admin cut */}
+<div style={{ marginBottom:14 }}>
+  <label style={{ display:'block', fontSize:11, fontWeight:600, color:'#fbbf24', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>
+    Your Cut Per Slot (₦) 🔒 Only you see this
+  </label>
+  <input type="number" value={form.admin_cut}
+    onChange={e => {
+      set('admin_cut', e.target.value)
+      // Auto calculate payout
+      const payout = parseFloat(form.amount_per_slot||0) - parseFloat(e.target.value||0)
+      if (payout > 0) set('payout_amount', payout.toString())
+    }}
+    placeholder="e.g. 5000" />
+  <div style={{ fontSize:11, color:'#534AB7', marginTop:4 }}>
+    Member collects = Pack amount minus your cut
+  </div>
+</div>
 
-              {/* Payout amount */}
-              <div style={{ marginBottom:14 }}>
-                <label style={{ display:'block', fontSize:11, fontWeight:600, color:'#AFA9EC', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>
-                  Payout Amount (₦) — what member collects
-                </label>
-                <input type="number" value={form.payout_amount}
-                  onChange={e => set('payout_amount', e.target.value)}
-                  placeholder="e.g. 20000" />
-              </div>
+{/* Payout — auto calculated, read only */}
+<div style={{ marginBottom:14 }}>
+  <label style={{ display:'block', fontSize:11, fontWeight:600, color:'#AFA9EC', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>
+    Member Collects (₦) — auto calculated
+  </label>
+  <input type="number" value={form.payout_amount}
+    onChange={e => set('payout_amount', e.target.value)}
+    placeholder="Auto calculated"
+    style={{ opacity: form.payout_amount ? 1 : 0.5 }}
+  />
+  {form.amount_per_slot && form.admin_cut && (
+    <div style={{ fontSize:12, color:'#22c55e', marginTop:4, fontWeight:600 }}>
+      ✓ Member packs ₦{parseFloat(form.amount_per_slot||0).toLocaleString()} → 
+      collects ₦{parseFloat(form.payout_amount||0).toLocaleString()} · 
+      Your cut: ₦{parseFloat(form.admin_cut||0).toLocaleString()}
+    </div>
+  )}
+</div>
 
               {/* Max slots */}
               <div style={{ marginBottom:20 }}>
