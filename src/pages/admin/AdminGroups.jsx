@@ -386,7 +386,7 @@ export default function AdminGroups() {
 {/* Amount per slot */}
 <div style={{ marginBottom:14 }}>
   <label style={{ display:'block', fontSize:11, fontWeight:600, color:'#AFA9EC', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>
-    Amount Members Pack (₦)
+    Amount Members Pay (₦)
   </label>
   <input type="number" value={form.amount_per_slot}
     onChange={e => {
