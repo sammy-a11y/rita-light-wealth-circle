@@ -428,7 +428,7 @@ export default function AdminGroups() {
   />
   {form.amount_per_slot && form.admin_cut && (
     <div style={{ fontSize:12, color:'#22c55e', marginTop:4, fontWeight:600 }}>
-      ✓ Member packs ₦{parseFloat(form.amount_per_slot||0).toLocaleString()} → 
+      ✓ Member pay ₦{parseFloat(form.amount_per_slot||0).toLocaleString()} → 
       collects ₦{parseFloat(form.payout_amount||0).toLocaleString()} · 
       Your cut: ₦{parseFloat(form.admin_cut||0).toLocaleString()}
     </div>
