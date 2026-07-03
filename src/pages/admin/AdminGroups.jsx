@@ -25,7 +25,8 @@ export default function AdminGroups() {
     description:    '',
     amount_per_slot:'',
     admin_cut:      '',
-    payout_amount:  '',
+    payout_gross:   '',   // NEW: full amount before admin fee, typed by admin
+    payout_amount:  '',   // auto-calculated = payout_gross - admin_cut (what members see/collect)
     frequency:      'daily',
     max_slots:      '15',
     bank_name:      '',
@@ -34,6 +35,14 @@ export default function AdminGroups() {
   })
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  // Net = gross payout minus admin fee. Only returns a value when it's a valid positive number.
+  const recomputeNet = (gross, cut) => {
+    const g = parseFloat(gross || 0)
+    const c = parseFloat(cut || 0)
+    const net = g - c
+    return net > 0 ? net.toString() : ''
+  }
 
   useEffect(() => { fetchGroups() }, [])
 
@@ -51,9 +60,13 @@ export default function AdminGroups() {
   }
 
   const createGroup = async () => {
-    if (!form.name.trim())            { toast.error('Enter group name');              return }
-    if (!form.amount_per_slot)        { toast.error('Enter amount members will pack');return }
-    if (!form.payout_amount)          { toast.error('Enter payout amount');           return }
+    if (!form.name.trim())            { toast.error('Enter group name');                          return }
+    if (!form.amount_per_slot)        { toast.error('Enter amount members will pay per slot');    return }
+    if (!form.payout_gross)           { toast.error('Enter the full payout amount (before your fee)'); return }
+    if (form.admin_cut && parseFloat(form.admin_cut) >= parseFloat(form.payout_gross)) {
+      toast.error('Your fee cannot be more than or equal to the payout amount'); return
+    }
+    if (!form.payout_amount)          { toast.error('Payout could not be calculated — check your fee'); return }
     if (!form.max_slots)              { toast.error('Enter number of slots');         return }
     if (parseInt(form.max_slots) < 4) { toast.error('Minimum 4 slots required');     return }
     if (!form.bank_name.trim())       { toast.error('Enter bank name');               return }
@@ -66,7 +79,8 @@ export default function AdminGroups() {
         name:            form.name.trim(),
         description:     form.description.trim(),
         amount_per_slot: parseFloat(form.amount_per_slot),
-        payout_amount:   parseFloat(form.payout_amount),
+        payout_gross:    parseFloat(form.payout_gross),   // full amount before fee
+        payout_amount:   parseFloat(form.payout_amount),  // net amount members actually collect
         admin_cut:       parseFloat(form.admin_cut || 0),
         frequency:       form.frequency,
         max_slots:       parseInt(form.max_slots),
@@ -82,7 +96,7 @@ export default function AdminGroups() {
       setShowForm(false)
       setForm({
         name:'', description:'', amount_per_slot:'',
-        admin_cut:'', payout_amount:'', frequency:'daily',
+        admin_cut:'', payout_gross:'', payout_amount:'', frequency:'daily',
         max_slots:'15', bank_name:'', account_name:'', account_number:'',
       })
       fetchGroups()
@@ -190,12 +204,12 @@ export default function AdminGroups() {
                       <div style={{ background:'#1f1d35', borderRadius:10, padding:'8px 10px', textAlign:'center' }}>
                         <div style={{ fontSize:9, color:'#534AB7', fontWeight:700, marginBottom:3 }}>MEMBERS PAY</div>
                         <div style={{ fontSize:14, fontWeight:800, color:'#f1f0ff' }}>₦{group.amount_per_slot?.toLocaleString()}</div>
-                        <div style={{ fontSize:9, color:'#534AB7' }}>per {freqShort(group.frequency)}</div>
+                        <div style={{ fontSize:9, color:'#534AB7' }}>per slot</div>
                       </div>
                       <div style={{ background:'#1f1d35', borderRadius:10, padding:'8px 10px', textAlign:'center' }}>
                         <div style={{ fontSize:9, color:'#854d0e', fontWeight:700, marginBottom:3 }}>THEY COLLECT</div>
                         <div style={{ fontSize:14, fontWeight:800, color:'#fbbf24' }}>₦{group.payout_amount?.toLocaleString()}</div>
-                        <div style={{ fontSize:9, color:'#534AB7' }}>per slot</div>
+                        <div style={{ fontSize:9, color:'#534AB7' }}>net, per slot</div>
                       </div>
                       <div style={{ background:'#1f1d35', borderRadius:10, padding:'8px 10px', textAlign:'center' }}>
                         <div style={{ fontSize:9, color:'#534AB7', fontWeight:700, marginBottom:3 }}>SLOTS</div>
@@ -206,9 +220,11 @@ export default function AdminGroups() {
 
                     {/* Admin cut — only Rita sees */}
                     {group.admin_cut > 0 && (
-                      <div style={{ background:'linear-gradient(135deg, #1c1a0e, #2a2408)', border:'1px solid #fbbf2430', borderRadius:10, padding:'8px 12px', marginBottom:12, display:'flex', justifyContent:'space-between' }}>
-                        <span style={{ fontSize:11, color:'#854d0e' }}>🔒 Your cut per slot</span>
-                        <span style={{ fontSize:13, fontWeight:800, color:'#fbbf24' }}>₦{group.admin_cut?.toLocaleString()}</span>
+                      <div style={{ background:'linear-gradient(135deg, #1c1a0e, #2a2408)', border:'1px solid #fbbf2430', borderRadius:10, padding:'8px 12px', marginBottom:12, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:4 }}>
+                        <span style={{ fontSize:11, color:'#854d0e' }}>
+                          🔒 Gross ₦{group.payout_gross?.toLocaleString()} − fee ₦{group.admin_cut?.toLocaleString()}
+                        </span>
+                        <span style={{ fontSize:13, fontWeight:800, color:'#fbbf24' }}>= ₦{group.payout_amount?.toLocaleString()} net</span>
                       </div>
                     )}
 
@@ -299,15 +315,24 @@ export default function AdminGroups() {
                 </div>
               </Field>
 
-              {/* Amount per slot */}
-              <Field label={`Amount Members Pack (₦) per ${freqShort(form.frequency)}`}>
+              {/* Amount per slot — what each member pays. Independent of the payout calc. */}
+              <Field label="Amount Members Pay Per Slot (₦)">
                 <input type="number" value={form.amount_per_slot}
+                  onChange={e => set('amount_per_slot', e.target.value)}
+                  placeholder="e.g. 300" />
+                <div style={{ fontSize:11, color:'#534AB7', marginTop:4 }}>
+                  What each member packs every {freqShort(form.frequency)}.
+                </div>
+              </Field>
+
+              {/* Full payout — gross, typed directly by admin */}
+              <Field label="Full Payout Amount (₦) — before your fee">
+                <input type="number" value={form.payout_gross}
                   onChange={e => {
-                    set('amount_per_slot', e.target.value)
-                    const payout = parseFloat(e.target.value||0) - parseFloat(form.admin_cut||0)
-                    if (payout > 0) set('payout_amount', payout.toString())
+                    set('payout_gross', e.target.value)
+                    set('payout_amount', recomputeNet(e.target.value, form.admin_cut))
                   }}
-                  placeholder="e.g. 250" />
+                  placeholder="e.g. 25000" />
               </Field>
 
               {/* Admin cut */}
@@ -315,25 +340,23 @@ export default function AdminGroups() {
                 <input type="number" value={form.admin_cut}
                   onChange={e => {
                     set('admin_cut', e.target.value)
-                    const payout = parseFloat(form.amount_per_slot||0) - parseFloat(e.target.value||0)
-                    if (payout > 0) set('payout_amount', payout.toString())
+                    set('payout_amount', recomputeNet(form.payout_gross, e.target.value))
                   }}
-                  placeholder="e.g. 2300" />
+                  placeholder="e.g. 4000" />
                 <div style={{ fontSize:11, color:'#534AB7', marginTop:4 }}>
-                  This is deducted from what members collect. Members won't see this amount.
+                  This is deducted from the full payout above. Members won't see this amount.
                 </div>
               </Field>
 
-              {/* Payout — auto calculated */}
-              <Field label="Members Collect (₦) — auto calculated">
-                <input type="number" value={form.payout_amount}
-                  onChange={e => set('payout_amount', e.target.value)}
-                  placeholder="Auto fills when you enter above amounts" />
-                {form.amount_per_slot && form.admin_cut && form.payout_amount && (
-                  <div style={{ marginTop:8, background:'#052e16', border:'1px solid #166534', borderRadius:8, padding:'8px 12px', fontSize:12, color:'#22c55e' }}>
-                    ✓ Members pack <strong>₦{parseFloat(form.amount_per_slot).toLocaleString()}</strong> →
-                    collect <strong>₦{parseFloat(form.payout_amount).toLocaleString()}</strong> ·
-                    Your fee: <strong>₦{parseFloat(form.admin_cut).toLocaleString()}</strong> per slot
+              {/* Net payout — auto-calculated, read-only, this is what members actually see */}
+              <Field label="Members Collect (₦) — auto-calculated, fee already deducted">
+                <input type="number" value={form.payout_amount} readOnly
+                  style={{ opacity:0.75, cursor:'not-allowed' }}
+                  placeholder="Fills automatically once you enter payout & fee above" />
+                {form.payout_gross && form.admin_cut && form.payout_amount && (
+                  <div style={{ marginTop:8, background:'#1c1a0e', border:'1px solid #fbbf2450', borderRadius:8, padding:'8px 12px', fontSize:12, color:'#fbbf24' }}>
+                    ⚠️ Members will only see <strong>₦{parseFloat(form.payout_amount).toLocaleString()}</strong>.
+                    Your ₦{parseFloat(form.admin_cut).toLocaleString()} fee is already deducted and stays hidden from them.
                   </div>
                 )}
               </Field>
@@ -365,15 +388,16 @@ export default function AdminGroups() {
               </div>
 
               {/* Summary */}
-              {form.amount_per_slot && form.payout_amount && form.max_slots && (
+              {form.payout_gross && form.payout_amount && form.max_slots && (
                 <div style={{ background:'linear-gradient(135deg, #1c1a0e, #2a2408)', border:'1px solid #fbbf2420', borderRadius:14, padding:'14px 16px', marginBottom:20 }}>
                   <div style={{ fontSize:12, fontWeight:700, color:'#fbbf24', marginBottom:10 }}>Circle Summary</div>
                   {[
-                    { label:'Each member packs',     value:`₦${parseFloat(form.amount_per_slot||0).toLocaleString()} per ${freqShort(form.frequency)}` },
-                    { label:'Each member collects',  value:`₦${parseFloat(form.payout_amount||0).toLocaleString()}` },
-                    { label:'Your platform fee',     value:`₦${parseFloat(form.admin_cut||0).toLocaleString()} per slot` },
-                    { label:'Total slots',           value:`${form.max_slots} (2 yours + ${parseInt(form.max_slots||0)-2} for members)` },
-                    { label:'Circle starts when',   value:`All ${form.max_slots} slots are filled` },
+                    { label:'Each member pays',          value:`₦${parseFloat(form.amount_per_slot||0).toLocaleString()} per ${freqShort(form.frequency)}` },
+                    { label:'Full payout (gross)',        value:`₦${parseFloat(form.payout_gross||0).toLocaleString()}` },
+                    { label:'Your platform fee',          value:`₦${parseFloat(form.admin_cut||0).toLocaleString()} per slot` },
+                    { label:'Member actually collects',   value:`₦${parseFloat(form.payout_amount||0).toLocaleString()}` },
+                    { label:'Total slots',                value:`${form.max_slots} (2 yours + ${parseInt(form.max_slots||0)-2} for members)` },
+                    { label:'Circle starts when',         value:`All ${form.max_slots} slots are filled` },
                   ].map(r => (
                     <div key={r.label} style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
                       <span style={{ fontSize:11, color:'#854d0e' }}>{r.label}</span>
