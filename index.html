@@ -24,6 +24,14 @@
     <!-- PWA style tag for theme -->
     <style id="theme-inputs"></style>
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "32a043be-37ea-4053-b83c-f3c13e97c4f5",
+        });
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>
