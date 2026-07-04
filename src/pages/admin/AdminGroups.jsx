@@ -462,7 +462,7 @@ function Field({ label, children }) {
       <label style={{ display:'block', fontSize:11, fontWeight:600, color:'#AFA9EC', marginBottom:6, textTransform:'uppercase', letterSpacing:'0.05em' }}>
         {label}
       </label>
-      {children}<></>
+      {children}
     </div>
   )
 }
