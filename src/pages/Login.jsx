@@ -50,7 +50,7 @@ export default function Login() {
     return
     }
 
-    loginOneSignalUser(data.user.id)
+    loginOneSignalUser(data.user.id).catch(() => {})
     
     toast.success(`Welcome back, ${profile?.full_name?.split(' ')[0]} 👋`)
     navigate('/dashboard')
