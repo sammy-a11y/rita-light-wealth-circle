@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
+import { loginOneSignalUser } from '../lib/oneSignal'
 import toast from 'react-hot-toast'
 import ritaLogo from '../assets/rita_logo.jpeg'
 
@@ -49,6 +50,8 @@ export default function Login() {
     return
     }
 
+    loginOneSignalUser(user.id)
+    
     toast.success(`Welcome back, ${profile?.full_name?.split(' ')[0]} 👋`)
     navigate('/dashboard')
 

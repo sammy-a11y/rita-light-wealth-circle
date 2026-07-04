@@ -5,6 +5,8 @@ import { Toaster } from 'react-hot-toast'
 import AOS from 'aos'
 import App from './App.jsx'
 import './index.css'
+import { initOneSignal } from './lib/oneSignal'
+initOneSignal()
 
 AOS.init({
   duration: 600,
