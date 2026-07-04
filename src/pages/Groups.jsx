@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -220,9 +219,9 @@ export default function Groups() {
                     </div>
 
                     {/* Amount cards */}
-                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:14 }}>
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:8 }}>
                       <div style={{ background:'#1f1d35', borderRadius:12, padding:'10px 12px' }}>
-                        <div style={{ fontSize:10, color:'#534AB7', fontWeight:600, marginBottom:2 }}>YOU PACK</div>
+                        <div style={{ fontSize:10, color:'#534AB7', fontWeight:600, marginBottom:2 }}>YOU PAY</div>
                         <div style={{ fontSize:18, fontWeight:800, color:'#f1f0ff' }}>
                           ₦{group.amount_per_slot?.toLocaleString()}
                         </div>
@@ -238,6 +237,19 @@ export default function Groups() {
                         </div>
                         <div style={{ fontSize:10, color:'#854d0e' }}>when your turn comes</div>
                       </div>
+                    </div>
+
+                    {/* Platform fee notice — subtle, honest */}
+                    <div style={{
+                      display:'flex', alignItems:'center', gap:6,
+                      marginBottom:12, padding:'6px 10px',
+                      background:'#1f1d35', borderRadius:8,
+                      border:'1px solid #2a2840',
+                    }}>
+                      <span style={{ fontSize:11 }}>ℹ️</span>
+                      <span style={{ fontSize:11, color:'#534AB7' }}>
+                        A small platform service fee applies. Payout shown is what you receive.
+                      </span>
                     </div>
 
                     {/* Progress bar */}
@@ -363,9 +375,9 @@ export default function Groups() {
               <div style={{ fontSize:13, color:'#534AB7', marginBottom:24 }}>{selectedGroup.name}</div>
 
               {/* Summary */}
-              <div style={{ background:'#1f1d35', border:'1px solid #2a2840', borderRadius:16, padding:16, marginBottom:20 }}>
+              <div style={{ background:'#1f1d35', border:'1px solid #2a2840', borderRadius:16, padding:16, marginBottom:16 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', marginBottom:8 }}>
-                  <span style={{ fontSize:12, color:'#534AB7' }}>Pack per slot</span>
+                  <span style={{ fontSize:12, color:'#534AB7' }}>Pay per slot</span>
                   <span style={{ fontSize:13, fontWeight:700, color:'#f1f0ff' }}>
                     ₦{selectedGroup.amount_per_slot?.toLocaleString()} / {freqShort(selectedGroup.frequency)}
                   </span>
@@ -382,6 +394,19 @@ export default function Groups() {
                     {getAvailableCount(selectedGroup)} slots open
                   </span>
                 </div>
+              </div>
+
+              {/* Fee notice inside modal too */}
+              <div style={{
+                display:'flex', alignItems:'flex-start', gap:8, marginBottom:16,
+                padding:'10px 12px', background:'#1f1d35',
+                border:'1px solid #2a2840', borderRadius:10,
+              }}>
+                <span style={{ fontSize:13, marginTop:1 }}>ℹ️</span>
+                <span style={{ fontSize:12, color:'#AFA9EC', lineHeight:1.6 }}>
+                  The collect amount shown is what you will actually receive.
+                  A small platform service fee has already been accounted for.
+                </span>
               </div>
 
               {/* Slot count picker */}
@@ -418,7 +443,7 @@ export default function Groups() {
                 display:'flex', justifyContent:'space-between',
               }}>
                 <div>
-                  <div style={{ fontSize:11, color:'#854d0e', fontWeight:600 }}>TOTAL YOU PACK</div>
+                  <div style={{ fontSize:11, color:'#854d0e', fontWeight:600 }}>TOTAL YOU PAY</div>
                   <div style={{ fontSize:20, fontWeight:800, color:'#fbbf24' }}>
                     ₦{(selectedGroup.amount_per_slot * slotsWanted)?.toLocaleString()}
                     <span style={{ fontSize:11, color:'#854d0e', fontWeight:400 }}>/{freqShort(selectedGroup.frequency)}</span>
