@@ -11,21 +11,27 @@ export const initOneSignal = () => {
   })
 }
 
-// Call this after login — links Supabase user ID to OneSignal
 export const loginOneSignalUser = async (supabaseUserId) => {
-  window.OneSignalDeferred = window.OneSignalDeferred || []
-  window.OneSignalDeferred.push(async function (OneSignal) {
-    try {
-      // Request permission first (native browser prompt)
-      const permission = await OneSignal.Notifications.requestPermission()
-      console.log('[OneSignal] permission:', permission)
-      // Link user
-      await OneSignal.login(supabaseUserId)
-      console.log('[OneSignal] user linked:', supabaseUserId)
-    } catch (err) {
-      console.warn('[OneSignal] error:', err)
-    }
-  })
+  try {
+    // Wait for OneSignal to be ready
+    await new Promise((resolve) => {
+      window.OneSignalDeferred = window.OneSignalDeferred || []
+      window.OneSignalDeferred.push(async (OneSignal) => {
+        try {
+          // Request native browser permission prompt
+          await OneSignal.Notifications.requestPermission()
+          // Link this device to the Supabase user ID
+          await OneSignal.login(supabaseUserId)
+          console.log('[OneSignal] linked:', supabaseUserId)
+        } catch (e) {
+          console.warn('[OneSignal] setup failed:', e)
+        }
+        resolve()
+      })
+    })
+  } catch (err) {
+    console.warn('[OneSignal] outer error:', err)
+  }
 }
 
 export const logoutOneSignalUser = () => {
