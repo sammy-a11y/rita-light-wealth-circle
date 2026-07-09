@@ -592,7 +592,7 @@ export default function Landing() {
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:14 }}>
           {[
             { icon:'📧', label:'Email',    value:'hello@ritalight.ng' },
-            { icon:'📞', label:'Phone',    value:'+234 800 000 0000' },
+            { icon:'📞', label:'Phone',    value:'+234 8140739102' },
             { icon:'📍', label:'Location', value:'Nigeria 🇳🇬' },
           ].map(c => (
             <div key={c.label} data-aos="fade-up"
