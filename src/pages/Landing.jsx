@@ -676,7 +676,7 @@ export default function Landing() {
               <div style={{ fontSize:12, fontWeight:700, color:'#f1f0ff', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:16 }}>Contact Us</div>
               {[
                 { icon:'📧', text:'hello@ritalight.ng' },
-                { icon:'📞', text:'+234 800 000 0000' },
+                { icon:'📞', text:'+234 8140739102' },
                 { icon:'💬', text:'WhatsApp Support' },
                 { icon:'📍', text:'Nigeria 🇳🇬' },
               ].map(c => (
