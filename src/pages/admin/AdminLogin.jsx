@@ -13,16 +13,10 @@ export default function AdminLogin() {
   const [form, setForm]       = useState({ email:'', password:'' })
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
-  const [attempts, setAttempts] = useState(0)
-  const [locked, setLocked]     = useState(false)
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const handleLogin = async () => {
-    if (locked) {
-      toast.error('Too many failed attempts. Try again later.')
-      return
-    }
     if (!form.email.trim())    { toast.error('Enter email');    return }
     if (!form.password.trim()) { toast.error('Enter password'); return }
 
@@ -35,24 +29,18 @@ export default function AdminLogin() {
       if (error) throw error
 
       // Fetch profile to check is_admin
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('users')
         .select('*')
         .eq('id', data.user.id)
         .single()
 
+      console.log('Profile fetched:', profile, 'Error:', profileError)
+
       // Not an admin — sign them out immediately
       if (!profile?.is_admin) {
         await supabase.auth.signOut()
-        const newAttempts = attempts + 1
-        setAttempts(newAttempts)
-        if (newAttempts >= 3) {
-          setLocked(true)
-          setTimeout(() => { setLocked(false); setAttempts(0) }, 5 * 60 * 1000)
-          toast.error('Too many failed attempts. Locked for 5 minutes.')
-        } else {
-          toast.error(`Access denied. This is a restricted area. (${3 - newAttempts} attempts left)`)
-        }
+        toast.error('Access denied. You are not an admin.')
         return
       }
 
@@ -69,15 +57,8 @@ export default function AdminLogin() {
       navigate('/admin')
 
     } catch (err) {
-      const newAttempts = attempts + 1
-      setAttempts(newAttempts)
-      if (newAttempts >= 3) {
-        setLocked(true)
-        setTimeout(() => { setLocked(false); setAttempts(0) }, 5 * 60 * 1000)
-        toast.error('Too many failed attempts. Locked for 5 minutes.')
-      } else {
-        toast.error(`Wrong credentials. (${3 - newAttempts} attempts left)`)
-      }
+      console.error('Login error:', err)
+      toast.error(err.message || 'Wrong credentials.')
     } finally {
       setLoading(false)
     }
@@ -126,7 +107,6 @@ export default function AdminLogin() {
                 boxShadow:'0 0 32px rgba(251,191,36,0.3)',
               }}
             />
-            {/* Crown badge */}
             <div style={{
               position:'absolute', bottom:-4, right:-4,
               width:24, height:24, borderRadius:'50%',
@@ -156,7 +136,6 @@ export default function AdminLogin() {
             position:'relative', overflow:'hidden',
           }}
         >
-          {/* Gold corner accent */}
           <div style={{
             position:'absolute', top:0, left:0, right:0, height:2,
             background:'linear-gradient(90deg, transparent, #fbbf24, transparent)',
@@ -167,30 +146,7 @@ export default function AdminLogin() {
           </h2>
           <p style={{ fontSize:12, color:'#534AB7', marginBottom:28, lineHeight:1.6 }}>
             🔒 This area is restricted to authorized personnel only.
-            Unauthorized access attempts are logged.
           </p>
-
-          {/* Locked state */}
-          {locked && (
-            <motion.div
-              initial={{ opacity:0, scale:0.95 }}
-              animate={{ opacity:1, scale:1 }}
-              style={{
-                background:'#2d0a0a', border:'1px solid #7f1d1d',
-                borderRadius:12, padding:'12px 14px',
-                marginBottom:20,
-                display:'flex', alignItems:'center', gap:10,
-              }}
-            >
-              <span style={{ fontSize:20 }}>🔒</span>
-              <div>
-                <div style={{ fontSize:12, fontWeight:700, color:'#ef4444' }}>Access Locked</div>
-                <div style={{ fontSize:11, color:'#fca5a5', marginTop:1 }}>
-                  Too many failed attempts. Locked for 5 minutes.
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {/* Email */}
           <div style={{ marginBottom:16 }}>
@@ -203,7 +159,6 @@ export default function AdminLogin() {
               onChange={e => set('email', e.target.value)}
               onKeyDown={onKeyDown}
               placeholder="admin@ritalight.ng"
-              disabled={locked}
               style={{
                 background:'#13121f',
                 border:'1px solid #fbbf2430',
@@ -229,7 +184,6 @@ export default function AdminLogin() {
                 onChange={e => set('password', e.target.value)}
                 onKeyDown={onKeyDown}
                 placeholder="Enter admin password"
-                disabled={locked}
                 style={{
                   background:'#13121f',
                   border:'1px solid #fbbf2430',
@@ -252,37 +206,20 @@ export default function AdminLogin() {
             </div>
           </div>
 
-          {/* Attempts warning */}
-          {attempts > 0 && !locked && (
-            <div style={{
-              background:'#1c1a0e', border:'1px solid #854d0e',
-              borderRadius:10, padding:'8px 12px',
-              fontSize:11, color:'#fbbf24',
-              marginBottom:16,
-              display:'flex', alignItems:'center', gap:6,
-            }}>
-              ⚠️ {attempts} failed attempt{attempts > 1 ? 's' : ''}. {3 - attempts} remaining before lockout.
-            </div>
-          )}
-
           {/* Login button */}
           <motion.button
             whileTap={{ scale:0.97 }}
             onClick={handleLogin}
-            disabled={loading || locked}
+            disabled={loading}
             style={{
               width:'100%', padding:'14px',
-              background: locked
-                ? '#1f1d35'
-                : loading
-                ? '#2a1f00'
-                : 'linear-gradient(135deg, #fbbf24, #d97706)',
+              background: loading ? '#2a1f00' : 'linear-gradient(135deg, #fbbf24, #d97706)',
               border:'none',
-              color: locked ? '#534AB7' : '#3a1f00',
+              color:'#3a1f00',
               borderRadius:14, fontSize:15,
               fontWeight:800,
-              cursor: locked || loading ? 'not-allowed' : 'pointer',
-              boxShadow: !locked && !loading ? '0 6px 24px rgba(251,191,36,0.25)' : 'none',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: !loading ? '0 6px 24px rgba(251,191,36,0.25)' : 'none',
               transition:'all 0.2s',
             }}
           >
@@ -295,7 +232,7 @@ export default function AdminLogin() {
                 />
                 Verifying...
               </span>
-            ) : locked ? '🔒 Locked' : 'Enter Admin Panel 👑'}
+            ) : 'Enter Admin Panel 👑'}
           </motion.button>
 
         </motion.div>
@@ -313,19 +250,6 @@ export default function AdminLogin() {
               color:'#3C3489', fontSize:12,
               cursor:'pointer', fontWeight:500,
             }}>← Back to main site</button>
-        </motion.div>
-
-        {/* Security note */}
-        <motion.div
-          initial={{ opacity:0 }}
-          animate={{ opacity:1 }}
-          transition={{ delay:0.5 }}
-          style={{ textAlign:'center', marginTop:16 }}
-        >
-          <p style={{ fontSize:10, color:'#2a2840', lineHeight:1.6 }}>
-            🔐 All admin access attempts are monitored and logged.<br />
-            Unauthorized access is strictly prohibited.
-          </p>
         </motion.div>
 
       </div>
